@@ -24,7 +24,8 @@ def split_image(img, n):
 
 def average_color(img):
     """
-    Compute average pixel values of each channel
+    Compute average pixel values of each channel.
+
     :param img: Input image
     :return: average value of each channel
     """
@@ -34,6 +35,12 @@ def average_color(img):
 
 
 def hue_to_color_name(hue_value):
+    """
+    Find the color that corresponds to hue_value.
+
+    :param hue_value: HSV_FULL
+    :return: string that names color
+    """
     if (0 <= hue_value <= 30) or (330 < hue_value <= 360):
         return "red"
     elif 30 < hue_value <= 90:
@@ -49,6 +56,13 @@ def hue_to_color_name(hue_value):
 
 
 def display_image_segments(img, colors, n):
+    """
+    Display original image and average colors side by side.
+
+    :param img: input image
+    :param colors: list of average colors (BGR)
+    :param n: number of image segments
+    """
     [height, width, _] = img.shape
     segment_height = 1.0 * height / n
     dominant_colors = np.zeros(img.shape, np.uint8)
