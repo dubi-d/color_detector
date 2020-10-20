@@ -77,7 +77,7 @@ if __name__ == "__main__":
         # categorize by hue value of center pixel
         for i in range(N_SPLITS):
             hsv = cv2.cvtColor(colors_bgr[i], cv2.COLOR_BGR2HSV_FULL)
-            print(f"Segment {i} dominant color: {hue_to_color_name(hsv[0, 0, 0])} (hue={hsv[0, 0, 0]})")
+            print(f"Segment {i} average: {hue_to_color_name(hsv[0, 0, 0])} (hue={hsv[0, 0, 0]})")
         print("----------\n")
 
         if DEBUG:
