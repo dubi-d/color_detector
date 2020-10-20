@@ -96,3 +96,5 @@ if __name__ == "__main__":
 
         if DEBUG:
             display_image_segments(frame, colors_bgr, N_SPLITS)
+
+        sleep(1)
