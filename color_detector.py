@@ -5,33 +5,80 @@ from time import sleep
 import os
 
 
-N_SPLITS = int(os.environ["N_SPLITS"])
+def split_image(img, n):
+    """
+    Split up the image into n horizontal segments of equal height.
 
-cap = cv2.VideoCapture(2)
+    :param img: Input image
+    :param n: Number of segments
+    :return: List of image segments
+    """
+    [height, width, _] = img.shape
+    segment_height = 1.0 * height / n
+    segments = []
+    for i in range(n):
+        seg = frame[int(i * segment_height):int((i + 1) * segment_height), :]  # split up image
+        segments.append(seg)
+    return segments
 
-frame_width = cap.get(3)
-frame_height = cap.get(4)
-segment_height = 1.0 * frame_height / N_SPLITS
 
-while True:
-    # Capture frame-by-frame
-    ret, frame = cap.read()
+def average_color(img):
+    """
+    Compute average pixel values of each channel
+    :param img: Input image
+    :return: average value of each channel
+    """
+    per_row = np.average(img, axis=0)
+    avg = np.average(per_row, axis=0)
+    return np.uint8([[[avg[0], avg[1], avg[2]]]])
 
-    # Put here your code!
-    # You can now treat output as a normal numpy array
-    # Do your magic here
-    if not ret:
-        continue
 
-    colors_bgr = np.zeros((N_SPLITS, 3))
-    for i in range(N_SPLITS):
-        seg = frame[int(i*segment_height):int((i+1)*segment_height), :]  # split up image
-        blur = cv2.GaussianBlur(seg, (segment_height/2, frame_width/2), 0)
-        colors_bgr[i, :] = blur[segment_height/2, frame_width/2, :]  # pick out center pixel
+def hue_to_color_name(hue_value):
+    if (0 <= hue_value <= 30) or (330 < hue_value <= 360):
+        return "red"
+    elif 30 < hue_value <= 90:
+        return "yellow"
+    elif 90 < hue_value <= 150:
+        return "green"
+    elif 150 < hue_value <= 210:
+        return "cyan"
+    elif 210 < hue_value <= 270:
+        return "blue"
+    elif 270 < hue_value <= 330:
+        return "purple"
 
-    # categorize by hue value of center pixel
-    colors_hsv = cv2.cvtColor(colors_bgr, cv2.COLOR_BGR2HSV)
-    for i in range(N_SPLITS):
-        print(f"Split {i} dominant hue: {colors_hsv[0, 0]}")
 
-    sleep(1)
+def display_image_segments(img, colors, n):
+    [height, width, _] = img.shape
+    segment_height = 1.0 * height / n
+    dominant_colors = np.zeros(img.shape, np.uint8)
+    for i in range(n):
+        dominant_colors[int(i * segment_height):int((i + 1) * segment_height), :] = colors[i]
+    cv2.imshow("Dominant Color", np.hstack([img, dominant_colors]))
+    cv2.waitKey(0)
+
+
+if __name__ == "__main__":
+    N_SPLITS = int(os.environ['N_SPLITS'])
+    DEBUG = False
+
+    cap = cv2.VideoCapture(2)
+
+    while True:
+        ret, frame = cap.read()
+
+        segments = split_image(frame, N_SPLITS)
+
+        # get average color of each segment
+        colors_bgr = []
+        for seg in segments:
+            colors_bgr.append(average_color(seg))
+
+        # categorize by hue value of center pixel
+        for i in range(N_SPLITS):
+            hsv = cv2.cvtColor(colors_bgr[i], cv2.COLOR_BGR2HSV_FULL)
+            print(f"Segment {i} dominant color: {hue_to_color_name(hsv[0, 0, 0])} (hue={hsv[0, 0, 0]})")
+        print("----------\n")
+
+        if DEBUG:
+            display_image_segments(frame, colors_bgr, N_SPLITS)
