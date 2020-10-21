@@ -48,6 +48,38 @@ def hue_to_color_name(hue_value):
         return "purple"
 
 
+def build_color_histogram(img):
+    """
+    Categorize each pixel into color bins and build a histogram.
+
+    :param img: input image
+    :return: histogram of frequent colors in image
+    """
+    color_hist = {"red": 0,
+                  "yellow": 0,
+                  "green": 0,
+                  "cyan": 0,
+                  "blue": 0,
+                  "purple": 0}
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV_FULL)
+    [height, width, _] = img_hsv.shape
+    for y in range(height):
+        for x in range(width):
+            pixel_color = hue_to_color_name(img_hsv[y, x, 0])
+            color_hist[pixel_color] += 1
+    return color_hist
+
+
+def most_frequent(color_hist):
+    """
+    Extract the most frequet color from the color histogram.
+
+    :param color_hist: color histogram
+    :return: key of the max value in color_hist
+    """
+    return max(color_hist, key=color_hist.get)
+
+
 def display_image_segments(img, colors, n):
     [height, width, _] = img.shape
     segment_height = 1.0 * height / n
@@ -72,16 +104,17 @@ if __name__ == "__main__":
 
     segments = split_image(frame, N_SPLITS)
 
-    colors_bgr = []
+    avg_colors_bgr = []
+    frequent_colors = []
     for seg in segments:
-        colors_bgr.append(average_color(seg))
+        avg_colors_bgr.append(average_color(seg))
+        hist = build_color_histogram(seg)
+        frequent_colors.append(most_frequent(hist))
 
-    # categorize by hue value of center pixel
     for i in range(N_SPLITS):
-        print(colors_bgr[i].shape)
-        print(colors_bgr[i][0], "this")
-        hsv = cv2.cvtColor(colors_bgr[i], cv2.COLOR_BGR2HSV_FULL)
-        print(f"Split {i} dominant color: {hue_to_color_name(hsv[0, 0, 0])} (hue={hsv[0, 0, 0]})")
+        hsv = cv2.cvtColor(avg_colors_bgr[i], cv2.COLOR_BGR2HSV_FULL)
+        print(f"Split {i}    average: {hue_to_color_name(hsv[0, 0, 0])} (hue={hsv[0, 0, 0]}), "
+              f"most frequent: {frequent_colors[i]}")
 
     if DEBUG:
-        display_image_segments(frame, colors_bgr, N_SPLITS)
+        display_image_segments(frame, avg_colors_bgr, N_SPLITS)
